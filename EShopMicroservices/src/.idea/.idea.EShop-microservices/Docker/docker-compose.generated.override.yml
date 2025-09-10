@@ -1,0 +1,59 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  basket.api:
+    build:
+      context: "C:\\Users\\giorg\\source\\repos\\EShopMicroservices\\src"
+      dockerfile: "Services/Basket/Basket.API/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net8.0/Basket.API.dll"
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "basketapi:dev"
+    ports: []
+    volumes:
+    - "C:\\Users\\giorg\\source\\repos\\EShopMicroservices\\src\\Services\\Basket\\\
+      Basket.API:/app:rw"
+    - "C:\\Users\\giorg\\source\\repos\\EShopMicroservices\\src:/src:rw"
+    - "C:\\Users\\giorg\\.nuget\\packages:/home/app/.nuget/packages"
+    working_dir: "/app"
+  catalog.api:
+    build:
+      context: "C:\\Users\\giorg\\source\\repos\\EShopMicroservices\\src"
+      dockerfile: "Services/Catalog/Catalog.API/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net8.0/Catalog.API.dll"
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "catalogapi:dev"
+    ports: []
+    volumes:
+    - "C:\\Users\\giorg\\source\\repos\\EShopMicroservices\\src\\Services\\Catalog\\\
+      Catalog.API:/app:rw"
+    - "C:\\Users\\giorg\\source\\repos\\EShopMicroservices\\src:/src:rw"
+    - "C:\\Users\\giorg\\.nuget\\packages:/home/app/.nuget/packages"
+    working_dir: "/app"
+  discount.grpc:
+    build:
+      context: "C:\\Users\\giorg\\source\\repos\\EShopMicroservices\\src"
+      dockerfile: "Services/Discount/Discount.Grpc/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net8.0/Discount.Grpc.dll"
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "discountgrpc:dev"
+    ports: []
+    volumes:
+    - "C:\\Users\\giorg\\source\\repos\\EShopMicroservices\\src\\Services\\Discount\\\
+      Discount.Grpc:/app:rw"
+    - "C:\\Users\\giorg\\source\\repos\\EShopMicroservices\\src:/src:rw"
+    - "C:\\Users\\giorg\\.nuget\\packages:/home/app/.nuget/packages"
+    working_dir: "/app"
