@@ -1,0 +1,10 @@
+using Payment.Domain.Aggregates.OrderAggregate.OrderApiProvider.DTOs;
+
+namespace Payment.Domain.Aggregates.OrderAggregate.OrderApiProvider;
+
+public interface IOrderApiProvider
+{
+    public Task<Order?> CreateOrderAsync(string jwt, CreateOrderDTO dto, CancellationToken cancellationToken = default);
+
+    public Task<Order?> GetOrderByIdAsync(string jwt, int orderId, CancellationToken cancellationToken = default);
+}

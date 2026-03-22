@@ -18,18 +18,16 @@ public class UserEndpoint : IEndpoint
         group.MapPost("/refresh-token", RefreshToken);
     }
 
-    private static async Task<IResult> Register(
-        UserService userService,
+    private static async Task<IResult> Register(UserService userService,
         [FromBody] RegisterUserRequest? request)
     {
         var command = RegisterUserRequest.ToCommand(request);
         await userService.RegisterAsync(command);
 
-        return Results.Ok();
+        return Results.Created();
     }
 
-    private static async Task<IResult> Login(
-        UserService userservice,
+    private static async Task<IResult> Login(UserService userservice,
         [FromBody] LoginUserRequest? request,
         CancellationToken cancellationToken = default)
     {
@@ -39,8 +37,7 @@ public class UserEndpoint : IEndpoint
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> RefreshToken(
-        UserService userService,
+    private static async Task<IResult> RefreshToken(UserService userService,
         [FromBody] RefreshTokenRequest? request,
         CancellationToken cancellationToken = default)
     {

@@ -5,14 +5,15 @@ namespace Core.Presentation.ServiceCollectionExtensions;
 
 internal static class OptionsServiceCollectionExtensions
 {
-    public static IServiceCollection AddCustomOptions(this IServiceCollection services)
+    internal static void AddCustomOptions(this IServiceCollection services)
     {
-        services
+        services.AddTokenValidationOptions();
+    }
+
+    private static void AddTokenValidationOptions(this IServiceCollection services)
+        => services
             .AddOptions<TokenValidationOptions>()
             .BindConfiguration(TokenValidationOptions.Key)
             .ValidateDataAnnotations()
             .ValidateOnStart();
-
-        return services;
-    }
 }

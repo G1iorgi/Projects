@@ -11,7 +11,7 @@ VALUES
 -- Insert Balances for the first CreditCard
 INSERT INTO "DigitalBank"."Balances" ("Currency", "Amount", "CreditCardId")
 VALUES
-('GEL', 1000, (SELECT "Id" FROM "DigitalBank"."CreditCards" WHERE "Number" = '4234567890123456')),
+('GEL', 10000, (SELECT "Id" FROM "DigitalBank"."CreditCards" WHERE "Number" = '4234567890123456')),
 ('USD', 100, (SELECT "Id" FROM "DigitalBank"."CreditCards" WHERE "Number" = '4234567890123456')),
 ('EUR', 50, (SELECT "Id" FROM "DigitalBank"."CreditCards" WHERE "Number" = '4234567890123456'));
 -- Insert Balances for the first CreditCard

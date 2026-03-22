@@ -1,0 +1,31 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Shopping.Presentation.Endpoints;
+
+namespace Shopping.Presentation.ServiceCollectionExtensions;
+
+internal static class EndpointServiceCollectionExtensions
+{
+    internal static void AddMinimalEndpoints(this IServiceCollection services)
+    {
+        var serviceDescriptors = typeof(DependencyInjection).Assembly
+            .DefinedTypes
+            .Where(type =>
+                type is { IsAbstract: false, IsInterface: false } &&
+                type.IsAssignableTo(typeof(IEndpoint)))
+            .Select(type => ServiceDescriptor.Transient(typeof(IEndpoint), type));
+
+        services.TryAddEnumerable(serviceDescriptors);
+    }
+
+    public static void UseMinimalEndpoints(this WebApplication app)
+    {
+        var endpoints = app.Services.GetRequiredService<IEnumerable<IEndpoint>>();
+
+        foreach (var endpoint in endpoints)
+        {
+            endpoint.MapRoutes(app);
+        }
+    }
+}

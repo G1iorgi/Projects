@@ -85,7 +85,7 @@ public class CategoryTests
     {
         // Arrange
         var category = Category.Create("Category 1");
-        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1);
+        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1, 1);
         var productQuantity = category.ProductQuantity;
 
         // Act
@@ -113,7 +113,7 @@ public class CategoryTests
     {
         // Arrange
         var category = Category.Create("Category 1");
-        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1);
+        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1, 1);
         category.AddProduct(product);
         var productQuantity = category.ProductQuantity;
 
@@ -129,7 +129,7 @@ public class CategoryTests
     {
         // Arrange
         var category = Category.Create("Category 1");
-        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1);
+        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1, 1);
 
         // Act
         var result = category.RemoveProduct(product);

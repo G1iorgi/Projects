@@ -10,7 +10,7 @@ namespace Core.Presentation.ServiceCollectionExtensions;
 
 internal static class AuthenticationServiceCollectionExtensions
 {
-    public static IServiceCollection AddCoreAuthentication(this IServiceCollection services)
+    internal static void AddCoreAuthentication(this IServiceCollection services)
     {
         var jwtConfig = services
             .BuildServiceProvider()
@@ -19,26 +19,22 @@ internal static class AuthenticationServiceCollectionExtensions
 
         Guard.Against.Null(jwtConfig);
 
-        services.AddAuthentication(
-            options =>
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(
-            options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = jwtConfig.ValidateIssuer,
-                    ValidateAudience = jwtConfig.ValidateAudience,
-                    ValidateLifetime = jwtConfig.ValidateLifetime,
-                    ValidateIssuerSigningKey = jwtConfig.ValidateIssuerSigningKey,
-                    ValidIssuer = jwtConfig.Issuer,
-                    ValidAudience = jwtConfig.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Secret))
-                };
-            });
-
-        return services;
+                ValidateIssuer = jwtConfig.ValidateIssuer,
+                ValidateAudience = jwtConfig.ValidateAudience,
+                ValidateLifetime = jwtConfig.ValidateLifetime,
+                ValidateIssuerSigningKey = jwtConfig.ValidateIssuerSigningKey,
+                ValidIssuer = jwtConfig.Issuer,
+                ValidAudience = jwtConfig.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Secret))
+            };
+        });
     }
 }

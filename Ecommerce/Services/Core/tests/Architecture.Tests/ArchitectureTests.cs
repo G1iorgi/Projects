@@ -27,8 +27,7 @@ public class ArchitectureTests
             .Select(otherLayer => otherLayer.GetName().Name)
             .ToList();
         var domainLayerDependenciesNames = domainLayerDependencies
-            .Select(domainLayerDependency => domainLayerDependency.Name).
-            ToList();
+            .Select(domainLayerDependency => domainLayerDependency.Name).ToList();
 
         Assert.DoesNotContain(otherLayersNames, x => domainLayerDependenciesNames.Contains(x));
     }

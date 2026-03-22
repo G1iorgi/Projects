@@ -2,8 +2,7 @@ namespace DigitalBank.API.IoC;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddDigitalBankServices(
-        this IServiceCollection services,
+    public static void AddDigitalBankServices(this IServiceCollection services,
         IConfiguration configuration)
     {
         services.AddDbContext(configuration);

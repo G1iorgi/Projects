@@ -16,8 +16,7 @@ public class ProductServiceTests
     public ProductServiceTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _productService = new ProductService(
-            _unitOfWorkMock.Object,
+        _productService = new ProductService(_unitOfWorkMock.Object,
             new Mock<IMapperService>().Object);
     }
 
@@ -48,7 +47,7 @@ public class ProductServiceTests
     {
         // Arrange
         const int productId = 1;
-        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1);
+        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1, 1);
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
             .ReturnsAsync(product);
@@ -93,6 +92,7 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int categoryId = 1;
         var category = Category.Create("Category 1");
         _unitOfWorkMock
@@ -111,6 +111,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = categoryId,
         };
 
@@ -121,7 +122,8 @@ public class ProductServiceTests
         _unitOfWorkMock.Verify(uow => uow.Products.IsUniqueAsync(barcode, CancellationToken.None), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(categoryId, CancellationToken.None), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Categories.Update(category), Times.Once);
-        _unitOfWorkMock.Verify(uow => uow.Products.CreateAsync(It.IsAny<Product>(), CancellationToken.None), Times.Once);
+        _unitOfWorkMock.Verify(uow => uow.Products.CreateAsync(It.IsAny<Product>(), CancellationToken.None),
+            Times.Once);
         _unitOfWorkMock.Verify(uow => uow.SaveChangesAsync(CancellationToken.None), Times.Once);
     }
 
@@ -134,6 +136,7 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int categoryId = 1;
         _unitOfWorkMock
             .Setup(uow => uow.Products.IsUniqueAsync(barcode, CancellationToken.None))
@@ -146,6 +149,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = categoryId,
         };
 
@@ -157,7 +161,8 @@ public class ProductServiceTests
         _unitOfWorkMock.Verify(uow => uow.Products.IsUniqueAsync(barcode, CancellationToken.None), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(categoryId, CancellationToken.None), Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()), Times.Never);
-        _unitOfWorkMock.Verify(uow => uow.Products.CreateAsync(It.IsAny<Product>(), CancellationToken.None), Times.Never);
+        _unitOfWorkMock.Verify(uow => uow.Products.CreateAsync(It.IsAny<Product>(), CancellationToken.None),
+            Times.Never);
         _unitOfWorkMock.Verify(uow => uow.SaveChangesAsync(CancellationToken.None), Times.Never);
     }
 
@@ -170,6 +175,7 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int categoryId = 1;
         _unitOfWorkMock
             .Setup(uow => uow.Products.IsUniqueAsync(barcode, CancellationToken.None))
@@ -185,6 +191,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = categoryId,
         };
 
@@ -196,7 +203,8 @@ public class ProductServiceTests
         _unitOfWorkMock.Verify(uow => uow.Products.IsUniqueAsync(barcode, CancellationToken.None), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(categoryId, CancellationToken.None), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()), Times.Never);
-        _unitOfWorkMock.Verify(uow => uow.Products.CreateAsync(It.IsAny<Product>(), CancellationToken.None), Times.Never);
+        _unitOfWorkMock.Verify(uow => uow.Products.CreateAsync(It.IsAny<Product>(), CancellationToken.None),
+            Times.Never);
         _unitOfWorkMock.Verify(uow => uow.SaveChangesAsync(CancellationToken.None), Times.Never);
     }
 
@@ -210,8 +218,9 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int categoryId = 1;
-        var product = Product.Create(name, barcode, description, price, image, categoryId);
+        var product = Product.Create(name, barcode, description, price, image, quantity, categoryId);
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
             .ReturnsAsync(product);
@@ -225,6 +234,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = categoryId,
         };
 
@@ -257,6 +267,7 @@ public class ProductServiceTests
             Description = "Description 1",
             Price = 10,
             Image = "Image 1",
+            Quantity = 1,
             CategoryId = 1,
         };
 
@@ -266,7 +277,8 @@ public class ProductServiceTests
         // Assert
         await Assert.ThrowsAsync<ArgumentException>(Act);
         _unitOfWorkMock.Verify(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None), Times.Once);
-        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None), Times.Never);
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None),
+            Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()), Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Products.Update(It.IsAny<Product>()), Times.Never);
         _unitOfWorkMock.Verify(uow => uow.SaveChangesAsync(CancellationToken.None), Times.Never);
@@ -282,8 +294,9 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int categoryId = 1;
-        var product = Product.Create(name, barcode, description, price, image, categoryId);
+        var product = Product.Create(name, barcode, description, price, image, quantity, categoryId);
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
             .ReturnsAsync(product);
@@ -297,6 +310,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = categoryId,
         };
 
@@ -305,7 +319,8 @@ public class ProductServiceTests
 
         // Assert
         _unitOfWorkMock.Verify(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None), Times.Once);
-        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None), Times.Never);
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None),
+            Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()), Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Products.IsUniqueAsync(barcode, CancellationToken.None), Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Products.Update(It.IsAny<Product>()), Times.Once);
@@ -322,11 +337,12 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int oldCategoryId = 1;
         var oldCategory = Category.Create("Category 1");
         const int newCategoryId = 2;
         var newCategory = Category.Create("Category 2");
-        var product = Product.Create(name, barcode, description, price, image, oldCategoryId);
+        var product = Product.Create(name, barcode, description, price, image, quantity,oldCategoryId);
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
             .ReturnsAsync(product);
@@ -346,6 +362,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = newCategoryId,
         };
 
@@ -356,6 +373,7 @@ public class ProductServiceTests
         _unitOfWorkMock.Verify(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(newCategoryId, CancellationToken.None), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(oldCategoryId, CancellationToken.None), Times.Once);
+
         // unitOfWorkMock.Verify(uow => uow.Categories.Update(newCategory), Times.Once);
         // unitOfWorkMock.Verify(uow => uow.Categories.Update(oldCategory), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Products.IsUniqueAsync(barcode, CancellationToken.None), Times.Never);
@@ -364,7 +382,8 @@ public class ProductServiceTests
     }
 
     [Fact]
-    public async Task UpdateProductAsync_Should_Throw_Exception_When_Category_Is_Updated_But_New_Category_Does_Not_Exist()
+    public async Task
+        UpdateProductAsync_Should_Throw_Exception_When_Category_Is_Updated_But_New_Category_Does_Not_Exist()
     {
         // Arrange
         const int productId = 1;
@@ -373,11 +392,12 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int oldCategoryId = 1;
         const int newCategoryId = 2;
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
-            .ReturnsAsync(Product.Create(name, barcode, description, price, image, oldCategoryId));
+            .ReturnsAsync(Product.Create(name, barcode, description, price, image, quantity, oldCategoryId));
         _unitOfWorkMock
             .Setup(uow => uow.Categories.GetByIdAsync(newCategoryId, CancellationToken.None))
             .ReturnsAsync((Category)null!);
@@ -390,6 +410,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = newCategoryId,
         };
 
@@ -408,7 +429,8 @@ public class ProductServiceTests
     }
 
     [Fact]
-    public async Task UpdateProductAsync_Should_Throw_Exception_When_Category_Is_Updated_But_Old_Category_Does_Not_Exist()
+    public async Task
+        UpdateProductAsync_Should_Throw_Exception_When_Category_Is_Updated_But_Old_Category_Does_Not_Exist()
     {
         // Arrange
         const int productId = 1;
@@ -417,12 +439,13 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int oldCategoryId = 1;
         const int newCategoryId = 2;
         var newCategory = Category.Create("Category 2");
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
-            .ReturnsAsync(Product.Create(name, barcode, description, price, image, oldCategoryId));
+            .ReturnsAsync(Product.Create(name, barcode, description, price, image, quantity, oldCategoryId));
         _unitOfWorkMock
             .Setup(uow => uow.Categories.GetByIdAsync(newCategoryId, CancellationToken.None))
             .ReturnsAsync(newCategory);
@@ -438,6 +461,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = newCategoryId,
         };
 
@@ -465,8 +489,9 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int categoryId = 1;
-        var product = Product.Create(name, barcode, description, price, image, categoryId);
+        var product = Product.Create(name, barcode, description, price, image, quantity, categoryId);
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
             .ReturnsAsync(product);
@@ -480,6 +505,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = categoryId,
         };
 
@@ -488,7 +514,8 @@ public class ProductServiceTests
 
         // Assert
         _unitOfWorkMock.Verify(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None), Times.Once);
-        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None), Times.Never);
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None),
+            Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()), Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Products.IsUniqueAsync(barcode, CancellationToken.None), Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Products.Update(It.IsAny<Product>()), Times.Once);
@@ -505,11 +532,12 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int categoryId = 1;
         const string newBarcode = "987654321";
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
-            .ReturnsAsync(Product.Create(name, barcode, description, price, image, categoryId));
+            .ReturnsAsync(Product.Create(name, barcode, description, price, image, quantity, categoryId));
         _unitOfWorkMock
             .Setup(uow => uow.Products.IsUniqueAsync(newBarcode, CancellationToken.None))
             .ReturnsAsync(false);
@@ -522,6 +550,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = categoryId,
         };
 
@@ -531,7 +560,8 @@ public class ProductServiceTests
         // Assert
         await Assert.ThrowsAsync<ArgumentException>(Act);
         _unitOfWorkMock.Verify(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None), Times.Once);
-        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None), Times.Never);
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None),
+            Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()), Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Products.IsUniqueAsync(newBarcode, CancellationToken.None), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Products.Update(It.IsAny<Product>()), Times.Never);
@@ -548,9 +578,10 @@ public class ProductServiceTests
         const string description = "Description 1";
         const decimal price = 10;
         const string image = "Image 1";
+        const int quantity = 1;
         const int categoryId = 1;
         const string newBarcode = "987654321";
-        var product = Product.Create(name, barcode, description, price, image, categoryId);
+        var product = Product.Create(name, barcode, description, price, image, quantity, categoryId);
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
             .ReturnsAsync(product);
@@ -567,6 +598,7 @@ public class ProductServiceTests
             Description = description,
             Price = price,
             Image = image,
+            Quantity = quantity,
             CategoryId = categoryId,
         };
 
@@ -575,7 +607,8 @@ public class ProductServiceTests
 
         // Assert
         _unitOfWorkMock.Verify(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None), Times.Once);
-        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None), Times.Never);
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(It.IsAny<int>(), CancellationToken.None),
+            Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()), Times.Never);
         _unitOfWorkMock.Verify(uow => uow.Products.IsUniqueAsync(newBarcode, CancellationToken.None), Times.Once);
         _unitOfWorkMock.Verify(uow => uow.Products.Update(It.IsAny<Product>()), Times.Once);
@@ -587,7 +620,7 @@ public class ProductServiceTests
     {
         // Arrange
         const int productId = 1;
-        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1);
+        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1, 1);
         var category = Category.Create("Category 1");
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
@@ -630,7 +663,7 @@ public class ProductServiceTests
     {
         // Arrange
         const int productId = 1;
-        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1);
+        var product = Product.Create("Product 1", "123456789", "Description 1", 10, "Image 1", 1, 1);
         _unitOfWorkMock
             .Setup(uow => uow.Products.GetByIdAsync(productId, CancellationToken.None))
             .ReturnsAsync(product);

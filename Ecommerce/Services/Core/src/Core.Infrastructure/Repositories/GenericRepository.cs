@@ -11,8 +11,7 @@ public class GenericRepository<T>(CoreDbContextMaster coreDbContext) : IGenericR
 
     public virtual IQueryable<T> GetAll() => CoreDbContext.Set<T>();
 
-    public async Task<List<T>> GetAllAsync(
-        int pageSize,
+    public async Task<List<T>> GetAllAsync(int pageSize,
         int pageNumber,
         CancellationToken cancellationToken = default)
     {
@@ -20,8 +19,7 @@ public class GenericRepository<T>(CoreDbContextMaster coreDbContext) : IGenericR
         return await ToPagedList(query, pageSize, pageNumber, cancellationToken);
     }
 
-    public async Task<List<T>> ToPagedList(
-        IQueryable<T> source,
+    public async Task<List<T>> ToPagedList(IQueryable<T> source,
         int pageSize,
         int pageNumber,
         CancellationToken cancellationToken = default)

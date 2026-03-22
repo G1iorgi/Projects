@@ -7,22 +7,19 @@ namespace Core.Presentation.ServiceCollectionExtensions;
 
 internal static class EndpointServiceCollectionExtensions
 {
-    public static IServiceCollection AddMinimalEndpoints(this IServiceCollection services)
+    internal static void AddMinimalEndpoints(this IServiceCollection services)
     {
         var serviceDescriptors = typeof(DependencyInjection).Assembly
             .DefinedTypes
-            .Where(
-                type =>
-                    type is { IsAbstract: false, IsInterface: false } &&
-                    type.IsAssignableTo(typeof(IEndpoint)))
+            .Where(type =>
+                type is { IsAbstract: false, IsInterface: false } &&
+                type.IsAssignableTo(typeof(IEndpoint)))
             .Select(type => ServiceDescriptor.Transient(typeof(IEndpoint), type));
 
         services.TryAddEnumerable(serviceDescriptors);
-
-        return services;
     }
 
-    public static IApplicationBuilder UseMinimalEndpoints(this WebApplication app)
+    internal static void UseMinimalEndpoints(this WebApplication app)
     {
         var endpoints = app.Services.GetRequiredService<IEnumerable<IEndpoint>>();
 
@@ -30,7 +27,5 @@ internal static class EndpointServiceCollectionExtensions
         {
             endpoint.MapRoutes(app);
         }
-
-        return app;
     }
 }

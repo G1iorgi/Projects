@@ -23,8 +23,7 @@ public class CategoryEndpoint : IEndpoint
         group.MapDelete("/{categoryId:int}", DeleteCategory);
     }
 
-    private static async Task<IResult> GetCategories(
-        CategoryService categoryService,
+    private static async Task<IResult> GetCategories(CategoryService categoryService,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? name = null,
@@ -32,8 +31,7 @@ public class CategoryEndpoint : IEndpoint
         [FromQuery] int? productQuantityTo = null,
         CancellationToken cancellationToken = default)
     {
-        var categories = await categoryService.GetAllCategoriesAsync(
-            pageSize,
+        var categories = await categoryService.GetAllCategoriesAsync(pageSize,
             pageNumber,
             name,
             productQuantityFrom,
@@ -43,19 +41,17 @@ public class CategoryEndpoint : IEndpoint
         return Results.Ok(categories);
     }
 
-    private static async Task<IResult> CreateCategory(
-        CategoryService categoryService,
+    private static async Task<IResult> CreateCategory(CategoryService categoryService,
         [FromBody] CreateCategoryRequest? request,
         CancellationToken cancellationToken = default)
     {
         var command = CreateCategoryRequest.ToCommand(request);
         await categoryService.CreateCategoryAsync(command, cancellationToken);
 
-        return Results.Ok();
+        return Results.Created();
     }
 
-    private static async Task<IResult> GetCategoryById(
-        CategoryService categoryService,
+    private static async Task<IResult> GetCategoryById(CategoryService categoryService,
         [FromRoute] int categoryId,
         CancellationToken cancellationToken = default)
     {
@@ -64,24 +60,22 @@ public class CategoryEndpoint : IEndpoint
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> UpdateCategory(
-        CategoryService categoryService,
+    private static async Task<IResult> UpdateCategory(CategoryService categoryService,
         [FromBody] UpdateCategoryRequest? request,
         CancellationToken cancellationToken = default)
     {
         var command = UpdateCategoryRequest.ToCommand(request);
         await categoryService.UpdateCategoryAsync(command, cancellationToken);
 
-        return Results.Ok();
+        return Results.NoContent();
     }
 
-    private static async Task<IResult> DeleteCategory(
-        CategoryService categoryService,
+    private static async Task<IResult> DeleteCategory(CategoryService categoryService,
         [FromRoute] int categoryId,
         CancellationToken cancellation = default)
     {
         await categoryService.DeleteCategoryAsync(categoryId, cancellation);
 
-        return Results.Ok();
+        return Results.NoContent();
     }
 }

@@ -4,12 +4,13 @@ using Core.Presentation.ServiceCollectionExtensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SharedKernel.Middlewares.GlobalExceptionHandlingMiddleware;
 
 namespace Core.Presentation;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddPresentation(this IServiceCollection services)
+    public static void AddPresentation(this IServiceCollection services)
     {
         Guard.Against.Null(services);
 
@@ -27,13 +28,13 @@ public static class DependencyInjection
         services.AddMinimalEndpoints();
         services.AddCoreAuthentication();
         services.AddAuthorization();
-
-        return services;
     }
 
-    public static IApplicationBuilder UseMiddlewares(this WebApplication app)
+    public static void UseMiddlewares(this WebApplication app)
     {
         Guard.Against.Null(app);
+
+        app.UseMiddleware<GlobalExceptionMiddleware>();
 
         if (app.Environment.IsDevelopment())
         {
@@ -46,7 +47,5 @@ public static class DependencyInjection
 
         app.UseMinimalEndpoints();
         app.UseHttpsRedirection();
-
-        return app;
     }
 }

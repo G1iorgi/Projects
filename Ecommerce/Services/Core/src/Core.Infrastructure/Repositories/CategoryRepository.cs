@@ -7,8 +7,7 @@ namespace Core.Infrastructure.Repositories;
 public class CategoryRepository(CoreDbContextMaster dbContext)
     : GenericRepository<Category>(dbContext), ICategoryRepository
 {
-    public async Task<bool> IsUniqueAsync(
-        string name,
+    public async Task<bool> IsUniqueAsync(string name,
         CancellationToken cancellationToken = default)
         => !await CoreDbContext.Categories.AnyAsync(c => c.Name == name, cancellationToken);
 }

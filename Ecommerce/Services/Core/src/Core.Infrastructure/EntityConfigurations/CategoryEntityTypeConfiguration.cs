@@ -1,4 +1,5 @@
 using Core.Domain.Aggregates.CategoryAggregate;
+using Core.Infrastructure.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,7 +9,8 @@ internal sealed class CategoryEntityTypeConfiguration : IEntityTypeConfiguration
 {
     public void Configure(EntityTypeBuilder<Category> builder)
     {
-        builder.ToTable("Categories");
+        //TODO es avuxsna gios
+        builder.ToTable(nameof(Category), CoreDbContextMaster.DefaultSchema);
 
         builder.HasKey(category => category.Id);
         builder.Property(category => category.Id).ValueGeneratedOnAdd();

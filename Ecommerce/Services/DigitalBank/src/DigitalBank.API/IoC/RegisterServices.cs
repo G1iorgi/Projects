@@ -10,14 +10,12 @@ public static class RegisterServices
 {
     public static void AddDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<DigitalBankDbContext>(
-            options =>
-            {
-                options.UseNpgsql(
-                    configuration.GetConnectionString(nameof(DigitalBankDbContext)),
-                    npgsqlBuilder => npgsqlBuilder.MigrationsHistoryTable(DigitalBankDbContext.MigrationHistoryTable));
-                options.UseLazyLoadingProxies();
-            });
+        services.AddDbContext<DigitalBankDbContext>(options =>
+        {
+            options.UseNpgsql(configuration.GetConnectionString(nameof(DigitalBankDbContext)),
+                npgsqlBuilder => npgsqlBuilder.MigrationsHistoryTable(DigitalBankDbContext.MigrationHistoryTable));
+            options.UseLazyLoadingProxies();
+        });
     }
 
     public static void AddRepositories(this IServiceCollection services)

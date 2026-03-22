@@ -18,13 +18,15 @@ public class ProductEndpoint : IEndpoint
 
         group.MapGet("/", GetProducts);
         group.MapPost("/", CreateProduct);
+        group.MapPost("/{productIds}", GetProductsByIds);
         group.MapGet("/{productId:int}", GetProductById);
         group.MapPut("/{productId:int}", UpdateProduct);
         group.MapDelete("/{productId:int}", DeleteProduct);
+        group.MapPut("/decrease", DecreaseProductQuantity);
+        group.MapPut("/increase", IncreaseProductsQuantity);
     }
 
-    private static async Task<IResult> GetProducts(
-        ProductService productService,
+    private static async Task<IResult> GetProducts(ProductService productService,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? name = null,
@@ -35,8 +37,7 @@ public class ProductEndpoint : IEndpoint
         [FromQuery] bool? hasImage = null,
         CancellationToken cancellationToken = default)
     {
-        var products = await productService.GetAllProductsAsync(
-            pageSize,
+        var products = await productService.GetAllProductsAsync(pageSize,
             pageNumber,
             name,
             barcode,
@@ -49,19 +50,17 @@ public class ProductEndpoint : IEndpoint
         return Results.Ok(products);
     }
 
-    private static async Task<IResult> CreateProduct(
-        ProductService productService,
+    private static async Task<IResult> CreateProduct(ProductService productService,
         [FromBody] CreateProductRequest? request,
         CancellationToken cancellationToken = default)
     {
         var command = CreateProductRequest.ToCommand(request);
         await productService.CreateProductAsync(command, cancellationToken);
 
-        return Results.Ok();
+        return Results.Created();
     }
 
-    private static async Task<IResult> GetProductById(
-        ProductService productService,
+    private static async Task<IResult> GetProductById(ProductService productService,
         [FromRoute] int productId,
         CancellationToken cancellationToken = default)
     {
@@ -70,24 +69,52 @@ public class ProductEndpoint : IEndpoint
         return Results.Ok(product);
     }
 
-    private static async Task<IResult> UpdateProduct(
-        ProductService productService,
+    private static async Task<IResult> GetProductsByIds(ProductService productService,
+         [FromBody] GetProductsByIdsRequest request,
+         CancellationToken cancellationToken = default)
+    {
+        var command = GetProductsByIdsRequest.ToCommand(request);
+        var products = await productService.GetProductsByIdsAsync(command, cancellationToken);
+
+        return Results.Ok(products);
+    }
+
+    private static async Task<IResult> UpdateProduct(ProductService productService,
         [FromBody] UpdateProductRequest? request,
         CancellationToken cancellationToken = default)
     {
         var command = UpdateProductRequest.ToCommand(request);
         await productService.UpdateProductAsync(command, cancellationToken);
 
-        return Results.Ok();
+        return Results.NoContent();
     }
 
-    private static async Task<IResult> DeleteProduct(
-        ProductService productService,
+    private static async Task<IResult> DeleteProduct(ProductService productService,
         [FromRoute] int productId,
         CancellationToken cancellationToken = default)
     {
         await productService.DeleteProductAsync(productId, cancellationToken);
 
-        return Results.Ok();
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> DecreaseProductQuantity(ProductService productService,
+        [FromBody] DecreaseProductsQuantityRequest? request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = DecreaseProductsQuantityRequest.ToCommand(request);
+        await productService.DecreaseProductQuantityAsync(command, cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> IncreaseProductsQuantity(ProductService productService,
+        [FromBody] IncreaseProductsQuantityRequest? request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = IncreaseProductsQuantityRequest.ToCommand(request);
+        await productService.IncreaseProductsQuantityAsync(command, cancellationToken);
+
+        return Results.NoContent();
     }
 }

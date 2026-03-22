@@ -9,6 +9,7 @@ public record ProductDTO(
     string Description,
     decimal Price,
     string? Image,
+    int Quantity,
     DateTimeOffset CreateDate,
     ProductStatus Status,
     int CategoryId,

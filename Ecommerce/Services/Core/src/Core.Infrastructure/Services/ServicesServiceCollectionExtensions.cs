@@ -7,6 +7,6 @@ internal static class ServicesServiceCollectionExtensions
 {
     internal static void AddServices(this IServiceCollection services)
     {
-        services.AddScoped<IMapperService, MapperServiceService>();
+        services.AddScoped<IMapperService, MapperService>();
     }
 }

@@ -10,11 +10,20 @@ public class ProductTests
         // Arrange
         const string name = "Product 1";
         const string barcode = "123456789";
+        const string description = "Description";
         const decimal price = 10.5m;
+        const string image = "image_url";
+        const int quantity = 100;
         const int categoryId = 1;
 
         // Act
-        var product = Product.Create(name, barcode, null, price, null, categoryId);
+        var product = Product.Create(name: name,
+            barcode: barcode,
+            description: description,
+            price: price,
+            image: image,
+            quantity: quantity,
+            categoryId: categoryId);
 
         // Assert
         Assert.NotNull(product);
@@ -22,22 +31,23 @@ public class ProductTests
         Assert.Equal(barcode, product.Barcode);
         Assert.Equal(price, product.Price);
         Assert.Equal(ProductStatus.Enabled, product.Status);
+        Assert.Equal(quantity, product.Quantity);
         Assert.Equal(categoryId, product.CategoryId);
     }
 
     [Theory]
-    [InlineData(null, "123456789", 10.5, 1)]
-    [InlineData("", "123456789", 10.5, 1)]
-    [InlineData("Product 1", null, 10.5, 1)]
-    [InlineData("Product 1", "", 10.5, 1)]
-    [InlineData("Product 1", "123456789", 0, 1)]
-    [InlineData("Product 1", "123456789", -1, 1)]
-    [InlineData("Product 1", "123456789", 10.5, 0)]
-    [InlineData("Product 1", "123456789", 10.5, -1)]
-    public void Create_Should_ThrowExpectionOnInvalidData(string name, string barcode, decimal price, int categoryId)
+    [InlineData(null, "123456789", 10.5, 1, 1)]
+    [InlineData("", "123456789", 10.5, 1, 1)]
+    [InlineData("Product 1", null, 10.5, 1, 1)]
+    [InlineData("Product 1", "", 10.5, 1, 1)]
+    [InlineData("Product 1", "123456789", 0, 1, 1)]
+    [InlineData("Product 1", "123456789", -1, 1, 1)]
+    [InlineData("Product 1", "123456789", 10.5, 1, 0)]
+    [InlineData("Product 1", "123456789", 10.5, 1, -1)]
+    public void Create_Should_ThrowExpectionOnInvalidData(string name, string barcode, decimal price, int quantity, int categoryId)
     {
         // Arrange & Act
-        var action = () => Product.Create(name, barcode, null, price, null, categoryId);
+        var action = () => Product.Create(name, barcode, null, price, null, quantity, categoryId);
 
         // Assert
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(barcode))
@@ -61,15 +71,16 @@ public class ProductTests
     public void UpdateMetadata_Should_Succeed()
     {
         // Arrange
-        var product = Product.Create("Product 1", "123456789", null, 10.5m, null, 1);
+        var product = Product.Create("Product 1", "123456789", null, 10.5m, null, 1, 1);
         var productId = product.Id;
         const string name = "Product 2";
         const string barcode = "987654321";
         const decimal price = 20.5m;
+        const int quantity = 1;
         const int categoryId = 2;
 
         // Act
-        product.UpdateMetadata(name, barcode, null, price, null, categoryId);
+        product.UpdateMetadata(name, barcode, null, price, null, quantity, categoryId);
 
         // Assert
         Assert.Equal(productId, product.Id);
@@ -81,18 +92,18 @@ public class ProductTests
     }
 
     [Theory]
-    [InlineData(null, "123456789", 10.5, 1)]
-    [InlineData("Product 1", null, 10.5, 1)]
-    [InlineData("Product 1", "123456789", 0, 1)]
-    [InlineData("Product 1", "123456789", 10.5, 0)]
-    public void UpdateMetadata_Should_ThrowExpectionOnInvalidData(string name, string barcode, decimal price,
+    [InlineData(null, "123456789", 10.5, 1, 1)]
+    [InlineData("Product 1", null, 10.5, 1, 1)]
+    [InlineData("Product 1", "123456789", 0, 1, 1)]
+    [InlineData("Product 1", "123456789", 10.5, 1, 0)]
+    public void UpdateMetadata_Should_ThrowExpectionOnInvalidData(string name, string barcode, decimal price, int quantity,
         int categoryId)
     {
         // Arrange
-        var product = Product.Create("Product 1", "123456789", null, 10.5m, null, 1);
+        var product = Product.Create("Product 1", "123456789", null, 10.5m, null, 1, 1);
 
         // Act
-        var action = () => product.UpdateMetadata(name, barcode, null, price, null, categoryId);
+        var action = () => product.UpdateMetadata(name, barcode, null, price, null, quantity, categoryId);
 
         // Assert
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(barcode))

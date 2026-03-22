@@ -4,6 +4,8 @@ using Core.Application.Aggregates.ProductAggregate.DTOs;
 using Core.Application.Services;
 using Core.Domain;
 using Core.Domain.Aggregates.ProductAggregate;
+using SharedKernel.Exceptions.Category;
+using SharedKernel.Exceptions.Product;
 
 namespace Core.Application.Aggregates.ProductAggregate;
 
@@ -11,8 +13,7 @@ public class ProductService(
     IUnitOfWork unitOfWork,
     IMapperService mapperService)
 {
-    public async Task<IEnumerable<ProductDTO>> GetAllProductsAsync(
-        int pageSize,
+    public async Task<IEnumerable<ProductDTO>> GetAllProductsAsync(int pageSize,
         int pageNumber,
         string? name = null,
         string? barcode = null,
@@ -56,8 +57,7 @@ public class ProductService(
             _ => products
         };
 
-        var pagedList = await unitOfWork.Products.ToPagedList(
-            products,
+        var pagedList = await unitOfWork.Products.ToPagedList(products.OrderBy(p => p.Id),
             pageSize,
             pageNumber,
             cancellationToken);
@@ -71,24 +71,25 @@ public class ProductService(
         var isUnique = await unitOfWork.Products.IsUniqueAsync(command.Barcode, cancellationToken);
         if (!isUnique)
         {
-            throw new ArgumentException($"Product with barcode {command.Barcode} already exists.");
+            throw new ProductBarcodeAlreadyExistsException(command.Barcode);
         }
 
         var category = await unitOfWork.Categories.GetByIdAsync(command.CategoryId, cancellationToken);
 
         if (category == null)
         {
-            throw new ArgumentException($"Category with ID {command.CategoryId} does not exist.");
+            throw new CategoryNotFoundException(command.CategoryId);
         }
 
         // Create a new product
-        var product = Product.Create(
-            command.Name,
+        var product = Product.Create(command.Name,
             command.Barcode,
             command.Description,
             command.Price,
             command.Image,
+            command.Quantity,
             command.CategoryId);
+
         await unitOfWork.Products.CreateAsync(product, cancellationToken);
 
         category.AddProduct(product);
@@ -102,9 +103,22 @@ public class ProductService(
         var product = await unitOfWork.Products.GetByIdAsync(id, cancellationToken);
 
         if (product == null)
-            throw new ArgumentException($"Product with ID {id} does not exist.");
+            throw new ProductNotFoundException(id);
 
         return mapperService.Map<ProductDTO>(product);
+    }
+
+    public async Task<IEnumerable<ProductDTO>> GetProductsByIdsAsync(GetProductsByIdsCommand command, CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Null(command);
+
+        var products = await unitOfWork.Products.GetByIdsAsync(command.ProductIds, cancellationToken);
+
+        var missingIds = command.ProductIds.Except(products.Select(p => p.Id)).ToList();
+        if (missingIds is { Count: > 0 })
+            throw new ProductNotFoundException(missingIds);
+
+        return mapperService.Map<IEnumerable<ProductDTO>>(products);
     }
 
     public async Task UpdateProductAsync(UpdateProductCommand command, CancellationToken cancellationToken = default)
@@ -115,7 +129,7 @@ public class ProductService(
 
         if (product == null)
         {
-            throw new ArgumentException($"Product with ID {command.Id} does not exist.");
+            throw new ProductNotFoundException(command.Id);
         }
 
         if (product.BarcodeHasChanged(command.Barcode))
@@ -123,7 +137,7 @@ public class ProductService(
             var isUnique = await unitOfWork.Products.IsUniqueAsync(command.Barcode, cancellationToken);
             if (!isUnique)
             {
-                throw new ArgumentException($"A product with the barcode '{command.Barcode}' already exists.");
+                throw new ProductBarcodeAlreadyExistsException(command.Barcode);
             }
         }
 
@@ -141,19 +155,19 @@ public class ProductService(
 
             if (newCategory == null)
             {
-                throw new ArgumentException($"Category with ID {command.CategoryId} does not exist.");
+                throw new CategoryNotFoundException(command.CategoryId);
             }
 
             newCategory.AddProduct(product);
             unitOfWork.Categories.Update(newCategory);
         }
 
-        product.UpdateMetadata(
-            command.Name,
+        product.UpdateMetadata(command.Name,
             command.Barcode,
             command.Description,
             command.Price,
             command.Image,
+            command.Quantity,
             command.CategoryId);
         unitOfWork.Products.Update(product);
 
@@ -165,21 +179,65 @@ public class ProductService(
         var product = await unitOfWork.Products.GetByIdAsync(id, cancellationToken);
         if (product == null)
         {
-            throw new ArgumentException($"Product with ID {id} does not exist.");
+            throw new ProductNotFoundException(id);
         }
 
         var category = await unitOfWork.Categories.GetByIdAsync(product.CategoryId, cancellationToken);
-
         if (category == null)
         {
-            throw new ArgumentException($"Category with ID {product.CategoryId} does not exist.");
+            throw new CategoryNotFoundException(product.CategoryId);
         }
 
         category.RemoveProduct(product);
+        unitOfWork.Categories.Update(category);
 
         await unitOfWork.Products.DeleteAsync(id, cancellationToken);
 
-        unitOfWork.Categories.Update(category);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DecreaseProductQuantityAsync(DecreaseProductsQuantityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Null(command);
+        Guard.Against.Null(command.Items);
+
+        var productIds = command.Items.Select(i => i.ProductId).ToList();
+        var products = await unitOfWork.Products.GetByIdsAsync(productIds, cancellationToken);
+
+        foreach (var item in command.Items)
+        {
+            var product = products.Find(p => p.Id == item.ProductId)
+                          ?? throw new ProductNotFoundException(item.ProductId);
+
+            if (!product.HasEnoughQuantity(item.Quantity))
+                throw new InsufficientProductQuantityException(item.ProductId);
+
+            product.DecreaseQuantity(item.Quantity);
+            unitOfWork.Products.Update(product);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task IncreaseProductsQuantityAsync(IncreaseProductsQuantityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Null(command);
+        Guard.Against.Null(command.Items);
+
+        var productIds = command.Items.Select(i => i.ProductId).ToList();
+        var products = await unitOfWork.Products.GetByIdsAsync(productIds, cancellationToken);
+
+        foreach (var item in command.Items)
+        {
+            var product = products.Find(p => p.Id == item.ProductId)
+                          ?? throw new ProductNotFoundException(item.ProductId);
+
+            product.IncreaseQuantity(item.Quantity);
+            unitOfWork.Products.Update(product);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

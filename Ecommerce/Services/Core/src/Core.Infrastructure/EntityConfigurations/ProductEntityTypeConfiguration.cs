@@ -1,4 +1,5 @@
 using Core.Domain.Aggregates.ProductAggregate;
+using Core.Infrastructure.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,7 +9,7 @@ internal sealed class ProductEntityTypeConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<Product> builder)
     {
-        builder.ToTable("Products");
+        builder.ToTable(nameof(Product), CoreDbContextMaster.DefaultSchema);
 
         builder.HasKey(product => product.Id);
         builder.Property(product => product.Id).ValueGeneratedOnAdd();
@@ -31,12 +32,6 @@ internal sealed class ProductEntityTypeConfiguration : IEntityTypeConfiguration<
         builder.HasOne(product => product.Category)
             .WithMany(category => category.Products)
             .HasForeignKey(product => product.CategoryId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // Optionally, define the relationship with wishlists
-        builder.HasMany(product => product.Wishlists)
-            .WithOne(wishlist => wishlist.Product)
-            .HasForeignKey(wishlist => wishlist.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

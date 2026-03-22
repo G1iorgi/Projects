@@ -15,8 +15,7 @@ public class CreditCardService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        return await creditCardRepository.ExistsAsync(
-            request.CreditCardNumber,
+        return await creditCardRepository.ExistsAsync(request.CreditCardNumber,
             request.ExpirationDate,
             request.CVV,
             cancellationToken);
@@ -26,8 +25,7 @@ public class CreditCardService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var creditCardInfo = await creditCardRepository.GetAsync(
-                                 request.CreditCardNumber,
+        var creditCardInfo = await creditCardRepository.GetAsync(request.CreditCardNumber,
                                  request.ExpirationDate,
                                  request.CVV,
                                  cancellationToken)
@@ -43,8 +41,7 @@ public class CreditCardService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var creditCardInfo = await creditCardRepository.GetAsync(
-                                 request.CreditCardNumber,
+        var creditCardInfo = await creditCardRepository.GetAsync(request.CreditCardNumber,
                                  request.ExpirationDate,
                                  request.CVV,
                                  cancellationToken)

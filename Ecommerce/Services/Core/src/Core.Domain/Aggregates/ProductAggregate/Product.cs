@@ -1,7 +1,5 @@
 using Ardalis.GuardClauses;
-using Core.Domain.Aggregates.CartAggregate;
 using Core.Domain.Aggregates.CategoryAggregate;
-using Core.Domain.Aggregates.WishlistAggregate;
 
 namespace Core.Domain.Aggregates.ProductAggregate;
 
@@ -13,18 +11,25 @@ public class Product
     {
     }
 
-    private Product(string name, string barcode, string? description, decimal price, string? image, DateTimeOffset createDate, ProductStatus status, int categoryId)
+    private Product(string name,
+        string barcode,
+        string? description,
+        decimal price,
+        string? image,
+        int quantity,
+        DateTimeOffset createDate,
+        ProductStatus status,
+        int categoryId)
     {
         Name = name;
         Barcode = barcode;
         Description = description;
         Price = price;
         Image = image;
+        Quantity = quantity;
         CreateDate = createDate;
         Status = status;
         CategoryId = categoryId;
-        Wishlists = new List<Wishlist>();
-        Carts = new List<Cart>();
     }
 
     public int Id { get; init; }
@@ -39,6 +44,8 @@ public class Product
 
     public string? Image { get; private set; }
 
+    public int Quantity { get; private set; }
+
     public DateTimeOffset CreateDate { get; private set; }
 
     public ProductStatus Status { get; private set; }
@@ -47,21 +54,22 @@ public class Product
 
     public virtual Category Category { get; private set; }
 
-    public virtual ICollection<Wishlist> Wishlists { get; private set; }
-
-    public virtual ICollection<Cart> Carts { get; private set; }
-
-    public static Product Create(string name, string barcode, string? description, decimal price, string? image, int categoryId)
+    public static Product Create(string name, string barcode, string? description, decimal price, string? image,
+        int quantity, int categoryId)
     {
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.NullOrWhiteSpace(barcode);
         Guard.Against.NegativeOrZero(price);
         Guard.Against.NegativeOrZero(categoryId);
 
-        return new Product(name, barcode, description, price, image, DateTimeOffset.UtcNow, ProductStatus.Enabled, categoryId);
+        var product = new Product(name, barcode, description, price, image, quantity, DateTimeOffset.UtcNow,
+            ProductStatus.Enabled, categoryId);
+
+        return product;
     }
 
-    public void UpdateMetadata(string name, string barcode, string? description, decimal price, string? image, int categoryId)
+    public void UpdateMetadata(string name, string barcode, string? description, decimal price, string? image,
+        int quantity, int categoryId)
     {
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.NullOrWhiteSpace(barcode);
@@ -73,6 +81,7 @@ public class Product
         Description = description;
         Price = price;
         Image = image;
+        Quantity = quantity;
         CategoryId = categoryId;
     }
 
@@ -88,5 +97,26 @@ public class Product
         Guard.Against.NegativeOrZero(categoryId);
 
         return CategoryId != categoryId;
+    }
+
+    public bool HasEnoughQuantity(int quantity)
+    {
+        Guard.Against.NegativeOrZero(quantity);
+
+        return Quantity >= quantity;
+    }
+
+    public void DecreaseQuantity(int quantity)
+    {
+        Guard.Against.NegativeOrZero(quantity);
+
+        Quantity -= quantity;
+    }
+
+    public void IncreaseQuantity(int quantity)
+    {
+        Guard.Against.NegativeOrZero(quantity);
+
+        Quantity += quantity;
     }
 }

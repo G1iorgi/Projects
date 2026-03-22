@@ -16,10 +16,8 @@ public static class Endpoints
             .WithTags("Credit Cards")
             .AddFluentValidationAutoValidation();
 
-        group.MapPost(
-            "/exists",
-            async (
-                [Required] [FromBody] ExistsRequest request,
+        group.MapPost("/exists",
+            async ([Required] [FromBody] ExistsRequest request,
                 CreditCardService creditCardService,
                 CancellationToken cancellationToken = default) =>
             {
@@ -28,10 +26,8 @@ public static class Endpoints
                 return Results.Ok(result);
             });
 
-        group.MapPost(
-            "/get-balance",
-            async (
-                [Required] [FromBody] GetBalanceRequest request,
+        group.MapPost("/get-balance",
+            async ([Required] [FromBody] GetBalanceRequest request,
                 CreditCardService creditCardService,
                 CancellationToken cancellationToken = default) =>
             {
@@ -40,10 +36,8 @@ public static class Endpoints
                 return Results.Ok(result);
             });
 
-        group.MapPost(
-            "/pay",
-            async (
-                [Required] [FromBody] PayRequest request,
+        group.MapPost("/pay",
+            async ([Required] [FromBody] PayRequest request,
                 CreditCardService creditCardService,
                 CancellationToken cancellationToken = default) =>
             {
@@ -60,10 +54,8 @@ public static class Endpoints
             .WithTags("Transactions")
             .AddFluentValidationAutoValidation();
 
-        group.MapGet(
-            "{transactionId}",
-            async (
-                [Required] [FromBody] GetTransactionRequest request,
+        group.MapPost("{transactionId}",
+            async ([Required] [FromBody] GetTransactionRequest request,
                 TransactionService transactionService,
                 CancellationToken cancellationToken = default) =>
             {
@@ -72,10 +64,8 @@ public static class Endpoints
                 return Results.Ok(response);
             });
 
-        group.MapGet(
-            "{transactionId}/status",
-            async (
-                [Required] [FromBody] GetTransactionStatusRequest request,
+        group.MapPost("{transactionId}/status",
+            async ([Required] [FromBody] GetTransactionStatusRequest request,
                 TransactionService transactionService,
                 CancellationToken cancellationToken = default) =>
             {
@@ -84,10 +74,8 @@ public static class Endpoints
                 return Results.Ok(response);
             });
 
-        group.MapPost(
-            "{transactionId}/refund",
-            async (
-                [Required] [FromBody] RefundRequest request,
+        group.MapPost("{transactionId}/refund",
+            async ([Required] [FromBody] RefundRequest request,
                 CreditCardService creditCardService,
                 CancellationToken cancellationToken = default) =>
             {

@@ -15,8 +15,7 @@ internal class BalanceEntityTypeConfiguration : IEntityTypeConfiguration<Balance
         builder.HasKey(balance => balance.Id);
         builder.Property(balance => balance.Id).ValueGeneratedOnAdd();
 
-        var converter = new ValueConverter<CurrencyType, string>(
-            currencyType => currencyType.ToString(),
+        var converter = new ValueConverter<CurrencyType, string>(currencyType => currencyType.ToString(),
             stringValue => (CurrencyType)Enum.Parse(typeof(CurrencyType), stringValue));
         builder.Property(balance => balance.Currency).IsRequired().HasConversion(converter);
 

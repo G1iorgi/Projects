@@ -15,6 +15,8 @@ public record CreateProductRequest
 
     public string? Image { get; init; }
 
+    public required int Quantity { get; init; }
+
     public required int CategoryId { get; init; }
 
     public static CreateProductCommand ToCommand(CreateProductRequest? request)
@@ -24,6 +26,7 @@ public record CreateProductRequest
         Guard.Against.NullOrWhiteSpace(request.Barcode);
         Guard.Against.NegativeOrZero(request.Price);
         Guard.Against.NegativeOrZero(request.CategoryId);
+        Guard.Against.Negative(request.Quantity);
 
         return new CreateProductCommand
         {
@@ -32,6 +35,7 @@ public record CreateProductRequest
             Description = request.Description,
             Price = request.Price,
             Image = request.Image,
+            Quantity = request.Quantity,
             CategoryId = request.CategoryId
         };
     }

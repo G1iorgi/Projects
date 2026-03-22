@@ -57,8 +57,7 @@ public class CategoryServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(category.Name, result.Name);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -76,8 +75,7 @@ public class CategoryServiceTests
 
         // Assert
         await Assert.ThrowsAsync<ArgumentException>(Act);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -96,12 +94,10 @@ public class CategoryServiceTests
         await _categoryService.CreateCategoryAsync(command);
 
         // Assert
-        _unitOfWorkMock.Verify(
-            uow =>
-            uow.Categories.IsUniqueAsync(command.Name, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow =>
+                uow.Categories.IsUniqueAsync(command.Name, It.IsAny<CancellationToken>()),
             Times.Once);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.CreateAsync(It.IsAny<Category>(), It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.CreateAsync(It.IsAny<Category>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -119,11 +115,9 @@ public class CategoryServiceTests
 
         // Assert
         await Assert.ThrowsAsync<ArgumentException>(Act);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.IsUniqueAsync(command.Name, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.IsUniqueAsync(command.Name, It.IsAny<CancellationToken>()),
             Times.Once);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.CreateAsync(It.IsAny<Category>(), It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.CreateAsync(It.IsAny<Category>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -141,13 +135,11 @@ public class CategoryServiceTests
 
         // Assert
         await Assert.ThrowsAsync<ArgumentException>(Act);
-        _unitOfWorkMock.Verify(
-            uow =>
-            uow.Categories.GetByIdAsync(command.Id, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow =>
+                uow.Categories.GetByIdAsync(command.Id, It.IsAny<CancellationToken>()),
             Times.Once);
-        _unitOfWorkMock.Verify(
-            uow =>
-            uow.Categories.IsUniqueAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow =>
+                uow.Categories.IsUniqueAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _unitOfWorkMock.Verify(x => x.Categories.Update(It.IsAny<Category>()), Times.Never);
     }
@@ -168,14 +160,11 @@ public class CategoryServiceTests
         await _categoryService.UpdateCategoryAsync(command);
 
         // Assert
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
             Times.Once);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.IsUniqueAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.IsUniqueAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.Update(It.IsAny<Category>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()),
             Times.Never);
     }
 
@@ -201,14 +190,11 @@ public class CategoryServiceTests
         await _categoryService.UpdateCategoryAsync(command);
 
         // Assert
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
             Times.Once);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.IsUniqueAsync(command.Name, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.IsUniqueAsync(command.Name, It.IsAny<CancellationToken>()),
             Times.Once);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.Update(It.IsAny<Category>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()),
             Times.Once);
     }
 
@@ -233,14 +219,11 @@ public class CategoryServiceTests
 
         // Assert
         await Assert.ThrowsAsync<ArgumentException>(Act);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()),
             Times.Once);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.IsUniqueAsync(command.Name, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.IsUniqueAsync(command.Name, It.IsAny<CancellationToken>()),
             Times.Once);
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.Update(It.IsAny<Category>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.Update(It.IsAny<Category>()),
             Times.Never);
     }
 
@@ -256,8 +239,7 @@ public class CategoryServiceTests
         await _categoryService.DeleteCategoryAsync(categoryId);
 
         // Assert
-        _unitOfWorkMock.Verify(
-            uow => uow.Categories.DeleteAsync(categoryId, It.IsAny<CancellationToken>()),
+        _unitOfWorkMock.Verify(uow => uow.Categories.DeleteAsync(categoryId, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 }

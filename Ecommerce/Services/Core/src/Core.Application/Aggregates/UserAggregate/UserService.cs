@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using SharedKernel.Exceptions.Identity;
 
 namespace Core.Application.Aggregates.UserAggregate;
 
@@ -27,7 +28,7 @@ public class UserService(
 
         var userExists = await userManager.FindByNameAsync(command.Username);
         if (userExists != null)
-            throw new ArgumentException($"User with username {command.Username} already exists.");
+            throw new UserAlreadyExistsException(command.Username);
 
         var user = new IdentityUser
         {
@@ -41,7 +42,7 @@ public class UserService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new ArgumentException($"User creation failed: {errors}");
+            throw new UserCreationFailedException(errors);
         }
     }
 
@@ -51,11 +52,11 @@ public class UserService(
 
         var user = await userManager.FindByNameAsync(command.Username);
         if (user == null)
-            throw new ArgumentException("Invalid username or password");
+            throw new InvalidCredentialsException();
 
         var isPasswordValid = await userManager.CheckPasswordAsync(user, command.Password);
         if (!isPasswordValid)
-            throw new ArgumentException("Invalid username or password");
+            throw new InvalidCredentialsException();
 
         // Generate JWT access token
         var accessToken = GenerateJwtToken(user);
@@ -84,8 +85,7 @@ public class UserService(
         return new LoginResponse { Token = accessToken, RefreshToken = refreshToken };
     }
 
-    public async Task<RefreshTokenResponse> RefreshTokenAsync(
-        RefreshTokenCommand command,
+    public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenCommand command,
         CancellationToken cancellationToken = default)
     {
         Guard.Against.Null(command);
@@ -98,13 +98,14 @@ public class UserService(
         // Generate new tokens
         var user = await userManager.FindByIdAsync(refreshToken!.UserId);
         if (user == null)
-            throw new ArgumentException("User not found");
+            throw new UserNotFoundException();
 
         var newAccessToken = GenerateJwtToken(user);
         var newRefreshToken = GenerateRefreshToken();
 
         // Mark the old refresh token as used and revoked
         refreshToken.MarkAsRevoked();
+        unitOfWork.RefreshTokens.Update(refreshToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var newRefreshTokenEntity = RefreshToken.Create(newRefreshToken, user.Id);
@@ -161,10 +162,10 @@ public class UserService(
     private static void ThrowIfRefreshTokenIsInvalid(RefreshToken? refreshToken)
     {
         if (refreshToken == null)
-            throw new ArgumentException("Invalid refresh token");
+            throw new InvalidRefreshTokenException();
         if (refreshToken.IsRevoked)
-            throw new ArgumentException("The refresh token has been revoked");
+            throw new RevokedRefreshTokenException();
         if (refreshToken.Expiration < DateTimeOffset.UtcNow)
-            throw new ArgumentException("The refresh token has expired");
+            throw new ExpiredRefreshTokenException();
     }
 }

@@ -14,16 +14,14 @@ public class TransactionService(TransactionRepository transactionRepository)
         var transaction = await transactionRepository.FindAsync(request.TransactionId, cancellationToken)
                           ?? throw new ArgumentNullException("Transaction not found");
 
-        return new TransactionDto(
-            transaction.Id,
+        return new TransactionDto(transaction.Id,
             transaction.Amount,
             transaction.Balance?.CreditCard?.Number,
             transaction.Status,
             transaction.CreateDate);
     }
 
-    public async Task<TransactionStatus> GetStatusAsync(
-        GetTransactionStatusRequest request,
+    public async Task<TransactionStatus> GetStatusAsync(GetTransactionStatusRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

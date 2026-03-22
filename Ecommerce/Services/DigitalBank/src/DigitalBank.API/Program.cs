@@ -6,7 +6,7 @@ builder.Services.AddDigitalBankServices(builder.Configuration);
 
 var app = builder.Build();
 
-if (app.Configuration.GetValue("NeedToRunMigration", true))
+if (app.Configuration.GetValue("NeedToRunMigration", false))
 {
     await Extensions.RunMigration(app);
 }

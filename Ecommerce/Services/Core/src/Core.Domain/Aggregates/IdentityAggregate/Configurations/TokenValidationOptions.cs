@@ -4,7 +4,7 @@ namespace Core.Domain.Aggregates.IdentityAggregate.Configurations;
 
 public sealed record TokenValidationOptions
 {
-    public const string Key = nameof(TokenValidationOptions);
+    public const string Key = "TokenValidationOptions";
 
     [Required]
     public bool ValidateIssuer { get; set; }

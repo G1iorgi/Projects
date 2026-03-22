@@ -5,13 +5,11 @@ public interface IGenericRepository<T>
 {
     IQueryable<T> GetAll();
 
-    Task<List<T>> GetAllAsync(
-        int pageSize,
+    Task<List<T>> GetAllAsync(int pageSize,
         int pageNumber,
         CancellationToken cancellationToken = default);
 
-    Task<List<T>> ToPagedList(
-        IQueryable<T> source,
+    Task<List<T>> ToPagedList(IQueryable<T> source,
         int pageSize,
         int pageNumber,
         CancellationToken cancellationToken = default);

@@ -12,5 +12,7 @@ public record CreateProductCommand
 
     public string? Image { get; init; }
 
+    public required int Quantity { get; init; }
+
     public required int CategoryId { get; init; }
 }
