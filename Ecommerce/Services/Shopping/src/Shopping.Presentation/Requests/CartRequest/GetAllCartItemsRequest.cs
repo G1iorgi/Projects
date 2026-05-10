@@ -1,14 +1,11 @@
 using Ardalis.GuardClauses;
+using SharedKernel.Pagination;
 using Shopping.Application.Aggregates.CartAggregate.Queries.GetAllItems;
 
 namespace Shopping.Presentation.Requests.CartRequest;
 
-public record GetAllCartItemsRequest
+public record GetAllCartItemsRequest : PaginatedRequest
 {
-    public required int PageSize { get; init; } = 10;
-
-    public required int PageNumber { get; init; } = 1;
-
     public string? ProductName { get; init; }
 
     public string? ProductDescription { get; init; }

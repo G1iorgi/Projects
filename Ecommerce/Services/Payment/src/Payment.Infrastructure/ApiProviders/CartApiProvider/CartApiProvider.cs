@@ -22,14 +22,4 @@ public class CartApiProvider(HttpClient httpClient) : ICartApiProvider
         var items = await response.Content.ReadFromJsonAsync<List<CartItem>>(cancellationToken);
         return items ?? [];
     }
-
-    public async Task RemoveAllItemsByUserId(string jwt, CancellationToken cancellationToken = default)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Delete, "api/carts/all");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
-
-        using var response = await httpClient.SendAsync(request, cancellationToken);
-        if (response is not { IsSuccessStatusCode: true })
-            throw new ApiProviderException();
-    }
 }

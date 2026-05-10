@@ -1,5 +1,6 @@
 using Ardalis.GuardClauses;
 using Core.Infrastructure.DbContexts;
+using Core.Infrastructure.Messaging;
 using Core.Infrastructure.Repositories;
 using Core.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
@@ -16,6 +17,7 @@ public static class DependencyInjection
 
         services.AddCoreDbContexts(configuration);
         services.AddRepositories();
+        services.AddMassTransit(configuration);
         services.AddServices();
 
         return services;

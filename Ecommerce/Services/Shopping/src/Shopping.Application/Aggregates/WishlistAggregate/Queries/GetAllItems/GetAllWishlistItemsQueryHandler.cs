@@ -1,51 +1,90 @@
 using Ardalis.GuardClauses;
+using Dapper;
+using SharedKernel.Contracts.Abstractions.Data;
 using SharedKernel.CQRS;
 using Shopping.Application.Aggregates.WishlistAggregate.Responses;
-using Shopping.Domain;
 
 namespace Shopping.Application.Aggregates.WishlistAggregate.Queries.GetAllItems;
 
-public class GetAllWishlistItemsQueryHandler(IUnitOfWork unitOfWork)
-        : IQueryHandler<GetAllWishlistItemsQuery, IEnumerable<ProductResponse>>
+public class GetAllWishlistItemsQueryHandler(
+    ISqlConnectionFactory sqlConnectionFactory)
+    : IQueryHandler<GetAllWishlistItemsQuery, IEnumerable<ProductResponse>>
 {
-    public async Task<IEnumerable<ProductResponse>> Handle(GetAllWishlistItemsQuery query, CancellationToken cancellationToken)
+    public async Task<IEnumerable<ProductResponse>> Handle(
+        GetAllWishlistItemsQuery query,
+        CancellationToken cancellationToken)
     {
         Guard.Against.Null(query);
 
-        var wishlist = await unitOfWork.Wishlists.GetByUserIdAsync(query.UserId, cancellationToken);
-        var items = wishlist?.WishlistItems.AsQueryable();
+        using var connection = sqlConnectionFactory.CreateConnection();
 
-        if (!string.IsNullOrWhiteSpace(query.ProductName))
-            items = items?.Where(i => i.ProductName.Contains(query.ProductName));
+        const string sql = """
+            SELECT
+                wi."ProductId" AS Id,
+                wi."ProductName" AS Name,
+                wi."ProductDescription" AS Description,
+                wi."ProductPrice" AS Price,
+                wi."ProductImage" AS Image
+            FROM "Shopping"."Wishlist" w
+            INNER JOIN "Shopping"."WishlistItem" wi
+                ON wi."WishlistId" = w."Id"
+            WHERE w."UserId" = @UserId
 
-        if (!string.IsNullOrWhiteSpace(query.ProductDescription))
-            items = items?.Where(i => i.ProductDescription != null && i.ProductDescription.Contains(query.ProductDescription));
+            AND (
+                @ProductName IS NULL
+                OR wi."ProductName" ILIKE '%' || @ProductName || '%'
+            )
 
-        if (query.PriceFrom.HasValue)
-            items = items?.Where(i => i.ProductPrice >= query.PriceFrom.Value);
+            AND (
+                @ProductDescription IS NULL
+                OR wi."ProductDescription" ILIKE '%' || @ProductDescription || '%'
+            )
 
-        if (query.PriceTo.HasValue)
-            items = items?.Where(i => i.ProductPrice <= query.PriceTo.Value);
+            AND (
+                @PriceFrom IS NULL
+                OR wi."ProductPrice" >= @PriceFrom
+            )
 
-        items = query.HasImage.HasValue
-            ? items?.Where(i => query.HasImage.Value
-                ? !string.IsNullOrWhiteSpace(i.ProductImage)
-                : string.IsNullOrWhiteSpace(i.ProductImage))
-            : items;
+            AND (
+                @PriceTo IS NULL
+                OR wi."ProductPrice" <= @PriceTo
+            )
 
-        var pagedItems = items?
-            .Skip((query.PageNumber - 1) * query.PageSize)
-            .Take(query.PageSize)
-            .Select(p => new ProductResponse
+            AND (
+                @HasImage IS NULL
+                OR (
+                    @HasImage = true
+                    AND wi."ProductImage" IS NOT NULL
+                    AND wi."ProductImage" <> ''
+                )
+                OR (
+                    @HasImage = false
+                    AND (
+                        wi."ProductImage" IS NULL
+                        OR wi."ProductImage" = ''
+                    )
+                )
+            )
+
+            ORDER BY wi."ProductName"
+            OFFSET @Offset
+            LIMIT @PageSize;
+        """;
+
+        var items = await connection.QueryAsync<ProductResponse>(
+            sql,
+            new
             {
-                Id = p.ProductId,
-                Name = p.ProductName,
-                Description = p.ProductDescription,
-                Price = p.ProductPrice,
-                Image = p.ProductImage
-            })
-            .ToList();
+                query.UserId,
+                query.ProductName,
+                query.ProductDescription,
+                query.PriceFrom,
+                query.PriceTo,
+                query.HasImage,
+                Offset = (query.PageNumber - 1) * query.PageSize,
+                query.PageSize
+            });
 
-        return pagedItems!;
+        return items;
     }
 }

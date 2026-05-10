@@ -2,12 +2,13 @@ using Ardalis.GuardClauses;
 using MediatR;
 using Payment.Domain.Aggregates.CartAggregate.CartApiProvider;
 using Payment.Domain.Aggregates.CartAggregate.CartApiProvider.DTOs;
-using Payment.Domain.Aggregates.OrderAggregate.OrderApiProvider;
-using Payment.Domain.Aggregates.OrderAggregate.OrderApiProvider.DTOs;
 using Payment.Domain.Aggregates.PaymentAggregate.PaymentApiProvider;
 using Payment.Domain.Aggregates.PaymentAggregate.PaymentApiProvider.DTOs;
 using Payment.Domain.Aggregates.ProductAggregate.ProductApiProvider;
 using Payment.Domain.Aggregates.ProductAggregate.ProductApiProvider.DTOs;
+using SharedKernel.Contracts.Abstractions;
+using SharedKernel.Contracts.Events;
+using SharedKernel.Contracts.Events.DTOs;
 using SharedKernel.CQRS;
 using SharedKernel.Exceptions.Cart;
 using SharedKernel.Exceptions.Payment;
@@ -19,7 +20,7 @@ public class PayFromCartCommandHandler(
     IPaymentApiProvider paymentApiProvider,
     ICartApiProvider cartApiProvider,
     IProductApiProvider productApiProvider,
-    IOrderApiProvider orderApiProvider) : ICommandHandler<PayFromCartCommand>
+    IEventBus eventBus) : ICommandHandler<PayFromCartCommand>
 {
     public async Task<Unit> Handle(PayFromCartCommand command, CancellationToken cancellationToken)
     {
@@ -46,7 +47,7 @@ public class PayFromCartCommandHandler(
         ValidateAllProductsExist(products, cartItems);
 
         decimal totalPrice = 0;
-        var orderItems = new List<CreateOrderItemDTO>();
+        var orderItems = new List<OrderItemDTO>();
         foreach (var item in cartItems)
         {
             var product = products!.Find(p => p.Id == item.Id)
@@ -57,12 +58,10 @@ public class PayFromCartCommandHandler(
 
             totalPrice += item.Quantity * product.Price;
 
-            orderItems.Add(new CreateOrderItemDTO
-            {
-                ProductId = product.Id,
-                Price = product.Price,
-                Quantity = item.Quantity,
-            });
+            orderItems.Add(new OrderItemDTO(
+                product.Id,
+                item.Quantity,
+                product.Price));
         }
 
         var balance = await paymentApiProvider.GetBalance(command.CreditCardNumber,
@@ -82,27 +81,24 @@ public class PayFromCartCommandHandler(
         if (transactionId == Guid.Empty)
             throw new PaymentFailedException();
 
-        var order = new CreateOrderDTO
-        {
-            UserId = command.UserId,
-            TotalPrice = totalPrice,
-            TransactionId = transactionId,
-            Status = OrderStatus.Completed,
-            OrderItems = orderItems,
-        };
+        var orderCreatedEvent = new OrderCreatedEvent(
+            command.UserId,
+            DateTimeOffset.UtcNow,
+            totalPrice,
+            transactionId,
+            OrderStatuses.Completed,
+            orderItems);
+        await eventBus.PublishAsync(orderCreatedEvent, cancellationToken);
 
-        await orderApiProvider.CreateOrderAsync(command.Jwt, order, cancellationToken);
+        var items = cartItems
+            .Select(item => new ProductQuantityDTO(item.Id, item.Quantity))
+            .ToList();
 
-        var dto = new DecreaseProductQuantitiesDto
-        {
-            Items = cartItems
-                .Select(item => new ProductQuantityDto(item.Id, item.Quantity))
-                .ToList()
-        };
+        var productsQuantityDecreasedEvent = new ProductsQuantitiesDecreasedEvent(items);
+        await eventBus.PublishAsync(productsQuantityDecreasedEvent, cancellationToken);
 
-        await productApiProvider.DecreaseProductsQuantityAsync(command.Jwt, dto, cancellationToken);
-
-        await cartApiProvider.RemoveAllItemsByUserId(command.Jwt, cancellationToken);
+        var cartEmptiedEvent = new CartEmptiedEvent(command.UserId);
+        await eventBus.PublishAsync(cartEmptiedEvent, cancellationToken);
 
         return Unit.Value;
     }

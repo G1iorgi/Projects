@@ -1,12 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Payment.Domain.Aggregates.CartAggregate.Configurations;
-using Payment.Domain.Aggregates.OrderAggregate.Configurations;
-using Payment.Domain.Aggregates.PaymentAggregate.Configurations;
-using Payment.Domain.Aggregates.ProductAggregate.Configurations;
 using Payment.Infrastructure.ApiProviders;
-using Payment.Infrastructure.ApiProviders.CartApiProvider;
+using Payment.Infrastructure.Messaging;
 
 namespace Payment.Infrastructure;
 
@@ -18,6 +14,7 @@ public static class DependencyInjection
         Guard.Against.Null(configuration);
 
         services.AddApiProviders(configuration);
+        services.AddMessaging(configuration);
 
         return services;
     }

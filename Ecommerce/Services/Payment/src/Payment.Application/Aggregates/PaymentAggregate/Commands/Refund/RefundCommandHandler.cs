@@ -8,6 +8,9 @@ using Payment.Domain.Aggregates.PaymentAggregate.PaymentApiProvider;
 using Payment.Domain.Aggregates.PaymentAggregate.PaymentApiProvider.DTOs;
 using Payment.Domain.Aggregates.ProductAggregate.ProductApiProvider;
 using Payment.Domain.Aggregates.ProductAggregate.ProductApiProvider.DTOs;
+using SharedKernel.Contracts.Abstractions;
+using SharedKernel.Contracts.Events;
+using SharedKernel.Contracts.Events.DTOs;
 using SharedKernel.CQRS;
 using SharedKernel.Exceptions.Order;
 using SharedKernel.Exceptions.Payment;
@@ -16,9 +19,10 @@ using SharedKernel.Exceptions.Product;
 namespace Payment.Application.Aggregates.PaymentAggregate.Commands.Refund;
 
 public class RefundCommandHandler(
-    IOrderApiProvider orderApiProvider,
     IPaymentApiProvider paymentApiProvider,
     IProductApiProvider productApiProvider,
+    IOrderApiProvider orderApiProvider,
+    IEventBus eventBus,
     IOptions<DigitalBankOptions> options) : ICommandHandler<RefundCommand>
 {
     private readonly DigitalBankOptions _digitalBankOptions = options.Value;
@@ -32,10 +36,6 @@ public class RefundCommandHandler(
         //     throw new UserNotFoundException();
         var originalOrder = await orderApiProvider.GetOrderByIdAsync(command.Jwt, command.OrderId, cancellationToken) ??
                             throw new OrderNotFoundException(command.OrderId);
-        if (originalOrder is null)
-        {
-            throw new OrderNotFoundException(command.OrderId);
-        }
 
         var previousTransaction =
             await paymentApiProvider.GetTransaction(originalOrder.TransactionId, cancellationToken);
@@ -47,23 +47,17 @@ public class RefundCommandHandler(
         if (refundedTransactionId == Guid.Empty)
             throw new RefundFailedException();
 
-        var refundedOrder = new CreateOrderDTO
-        {
-            UserId = command.UserId,
-            TotalPrice = originalOrder.TotalPrice,
-            TransactionId = refundedTransactionId,
-            Status = OrderStatus.Refunded,
-            OrderItems = originalOrder.OrderItems
-                .Select(item => new CreateOrderItemDTO
-                {
-                    ProductId = item.ProductId,
-                    Price = item.Price,
-                    Quantity = item.Quantity,
-                })
-                .ToList(),
-        };
-
-        await orderApiProvider.CreateOrderAsync(command.Jwt, refundedOrder, cancellationToken);
+        var orderRefundedEvent = new OrderRefundedEvent(
+            command.UserId,
+            DateTimeOffset.UtcNow,
+            originalOrder.TotalPrice,
+            refundedTransactionId,
+            OrderStatuses.Refunded,
+            originalOrder.OrderItems.Select(item => new OrderItemDTO(
+                item.ProductId,
+                item.Quantity,
+                item.Price)).ToList());
+        await eventBus.PublishAsync(orderRefundedEvent, cancellationToken);
 
         var productIds = originalOrder.OrderItems.Select(oi => oi.ProductId).ToList();
         var getProductsByIdsDto = new GetProductsByIdsDto
@@ -73,19 +67,18 @@ public class RefundCommandHandler(
         var products =
             await productApiProvider.GetProductsByIdsAsync(command.Jwt, getProductsByIdsDto, cancellationToken);
 
-        var dto = new IncreaseProductQuantitiesDto
-        {
-            Items = originalOrder.OrderItems
-                .Select(item =>
-                {
-                    var product = products!.Find(p => p.Id == item.ProductId)
-                                  ?? throw new ProductNotFoundException(item.ProductId);
-                    return new ProductQuantityDto(product.Id, item.Quantity);
-                })
-                .ToList(),
-        };
+        var items = originalOrder.OrderItems
+            .Select(item =>
+            {
+                var product = products!.Find(p => p.Id == item.ProductId)
+                              ?? throw new ProductNotFoundException(item.ProductId);
 
-        await productApiProvider.IncreaseProductsQuantityAsync(command.Jwt, dto, cancellationToken);
+                return new ProductQuantityDTO(product.Id, item.Quantity);
+            })
+            .ToList();
+
+        var productsQuantityIncreasedEvent = new ProductsQuantitiesIncreasedEvent(items);
+        await eventBus.PublishAsync(productsQuantityIncreasedEvent, cancellationToken);
 
         return Unit.Value;
     }

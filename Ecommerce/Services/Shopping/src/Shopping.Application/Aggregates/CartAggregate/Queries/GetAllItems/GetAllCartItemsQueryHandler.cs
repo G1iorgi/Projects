@@ -1,52 +1,83 @@
 using Ardalis.GuardClauses;
+using Dapper;
+using SharedKernel.Contracts.Abstractions.Data;
 using SharedKernel.CQRS;
 using Shopping.Application.Aggregates.CartAggregate.Responses;
 using Shopping.Domain;
 
 namespace Shopping.Application.Aggregates.CartAggregate.Queries.GetAllItems;
 
-public class GetAllCartItemsQueryHandler(IUnitOfWork unitOfWork)
+public class GetAllCartItemsQueryHandler(ISqlConnectionFactory sqlConnectionFactory)
     : IQueryHandler<GetAllCartItemsQuery, IEnumerable<ProductResponse>>
 {
     public async Task<IEnumerable<ProductResponse>> Handle(GetAllCartItemsQuery query, CancellationToken cancellationToken)
     {
         Guard.Against.Null(query);
 
-        var cart = await unitOfWork.Carts.GetByUserIdAsync(query.UserId, cancellationToken);
-        var items = cart?.CartItems.AsQueryable();
+        using var connection = sqlConnectionFactory.CreateConnection();
 
-        if (!string.IsNullOrWhiteSpace(query.ProductName))
-            items = items?.Where(i => i.ProductName.Contains(query.ProductName));
+        const string sql = """
+                           SELECT
+                               ci."ProductId" AS Id,
+                               ci."ProductName" AS Name,
+                               ci."ProductDescription" AS Description,
+                               ci."ProductPrice" AS Price,
+                               ci."ProductQuantity" AS Quantity,
+                               ci."ProductImage" AS Image
+                           FROM "Shopping"."Cart" c
+                           INNER JOIN "Shopping"."CartItem" ci
+                               ON ci."CartId" = c."Id"
+                           WHERE c."UserId" = @UserId
+                               AND (
+                                   @ProductName IS NULL
+                                   OR ci."ProductName" ILike '%' || @ProductName || '%'
+                               )
+                               AND (
+                                   @ProductDescription IS NULL
+                                   OR ci."ProductDescription" ILIKE '%' || @ProductDescription || '%'
+                               )
+                               AND (
+                                   @PriceFrom IS NULL
+                                   OR ci."ProductPrice" >= @PriceFrom
+                               )
+                               AND (
+                                   @PriceTo IS NULL
+                                   OR ci."ProductPrice" <= @PriceTo
+                               )
+                               AND (
+                                   @HasImage IS NULL
+                                   OR (
+                                       @HasImage = true
+                                       AND ci."ProductImage" IS NOT NULL
+                                       AND ci."ProductImage" <> ''
+                                   )
+                                   OR (
+                                       @HasImage = false
+                                       AND (
+                                           ci."ProductImage" IS NULL
+                                           OR ci."ProductImage" = ''
+                                       )
+                                   )
+                               )
+                           ORDER BY ci."ProductImage"
+                           OFFSET @Offset
+                           LIMIT @PageSize;
+                           """;
 
-        if (!string.IsNullOrWhiteSpace(query.ProductDescription))
-            items = items?.Where(i => i.ProductDescription != null && i.ProductDescription.Contains(query.ProductDescription));
-
-        if (query.PriceFrom.HasValue)
-            items = items?.Where(i => i.ProductPrice >= query.PriceFrom.Value);
-
-        if (query.PriceFrom.HasValue)
-            items = items?.Where(i => i.ProductPrice <= query.PriceTo!.Value);
-
-        items = query.HasImage.HasValue
-            ? items?.Where(i => query.HasImage.Value
-                ? !string.IsNullOrWhiteSpace(i.ProductImage)
-                : string.IsNullOrWhiteSpace(i.ProductImage))
-            : items;
-
-        var pagedItems = items?
-            .Skip((query.PageNumber - 1) * query.PageSize)
-            .Take(query.PageSize)
-            .Select(p => new ProductResponse
+        var items = await connection.QueryAsync<ProductResponse>(
+            sql,
+            new
             {
-                Id = p.ProductId,
-                Name = p.ProductName,
-                Description = p.ProductDescription,
-                Price = p.ProductPrice,
-                Quantity = p.ProductQuantity,
-                Image = p.ProductImage
-            })
-            .ToList();
+                query.UserId,
+                query.ProductName,
+                query.ProductDescription,
+                query.PriceFrom,
+                query.PriceTo,
+                query.HasImage,
+                Offset = (query.PageNumber - 1) * query.PageSize,
+                query.PageSize
+            });
 
-        return pagedItems!;
+        return items;
     }
 }

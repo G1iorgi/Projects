@@ -22,8 +22,6 @@ public class ProductEndpoint : IEndpoint
         group.MapGet("/{productId:int}", GetProductById);
         group.MapPut("/{productId:int}", UpdateProduct);
         group.MapDelete("/{productId:int}", DeleteProduct);
-        group.MapPut("/decrease", DecreaseProductQuantity);
-        group.MapPut("/increase", IncreaseProductsQuantity);
     }
 
     private static async Task<IResult> GetProducts(ProductService productService,
@@ -94,26 +92,6 @@ public class ProductEndpoint : IEndpoint
         CancellationToken cancellationToken = default)
     {
         await productService.DeleteProductAsync(productId, cancellationToken);
-
-        return Results.NoContent();
-    }
-
-    private static async Task<IResult> DecreaseProductQuantity(ProductService productService,
-        [FromBody] DecreaseProductsQuantityRequest? request,
-        CancellationToken cancellationToken = default)
-    {
-        var command = DecreaseProductsQuantityRequest.ToCommand(request);
-        await productService.DecreaseProductQuantityAsync(command, cancellationToken);
-
-        return Results.NoContent();
-    }
-
-    private static async Task<IResult> IncreaseProductsQuantity(ProductService productService,
-        [FromBody] IncreaseProductsQuantityRequest? request,
-        CancellationToken cancellationToken = default)
-    {
-        var command = IncreaseProductsQuantityRequest.ToCommand(request);
-        await productService.IncreaseProductsQuantityAsync(command, cancellationToken);
 
         return Results.NoContent();
     }

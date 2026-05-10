@@ -10,12 +10,4 @@ public interface IProductApiProvider
 
     public Task<Product?> GetProductByIdAsync(string jwt, int productId,
         CancellationToken cancellationToken = default);
-
-    public Task DecreaseProductsQuantityAsync(string jwt,
-        DecreaseProductQuantitiesDto dto,
-        CancellationToken cancellationToken = default);
-
-    public Task IncreaseProductsQuantityAsync(string jwt,
-        IncreaseProductQuantitiesDto dto,
-        CancellationToken cancellationToken = default);
 }

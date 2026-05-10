@@ -1,7 +1,6 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Payment.Domain.Aggregates.CartAggregate.CartApiProvider;
 using Payment.Domain.Aggregates.CartAggregate.Configurations;
 

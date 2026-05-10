@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using SharedKernel.Configurations;
 using Shopping.Domain.Aggregates.ProductAggregate.Configurations;
 using Shopping.Presentation.Configurations;
 
@@ -10,6 +11,7 @@ internal static class OptionsServiceCollectionExtensions
     {
         services.AddTokenValidationOptions();
         services.AddProductOptions();
+        services.AddMessageBrokerOptions();
     }
 
     private static void AddTokenValidationOptions(this IServiceCollection services)
@@ -23,6 +25,13 @@ internal static class OptionsServiceCollectionExtensions
         => services
             .AddOptions<ProductApiProviderOptions>()
             .BindConfiguration(ProductApiProviderOptions.Key)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+    private static void AddMessageBrokerOptions(this IServiceCollection services)
+        => services
+            .AddOptions<MessageBrokerOptions>()
+            .BindConfiguration(MessageBrokerOptions.Key)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 }

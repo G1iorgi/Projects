@@ -1,14 +1,11 @@
 using Ardalis.GuardClauses;
+using SharedKernel.Pagination;
 using Shopping.Application.Aggregates.WishlistAggregate.Queries.GetAllItems;
 
 namespace Shopping.Presentation.Requests.WishlistRequest;
 
-public record GetAllWishlistItemsRequest
+public record GetAllWishlistItemsRequest : PaginatedRequest
 {
-    public required int PageSize { get; init; } = 10;
-
-    public required int PageNumber { get; init; } = 1;
-
     public string? ProductName { get; init; }
 
     public string? ProductDescription { get; init; }

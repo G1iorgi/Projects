@@ -1,11 +1,11 @@
 ﻿using Ardalis.GuardClauses;
 using MediatR;
-using Payment.Domain.Aggregates.OrderAggregate.OrderApiProvider;
-using Payment.Domain.Aggregates.OrderAggregate.OrderApiProvider.DTOs;
 using Payment.Domain.Aggregates.PaymentAggregate.PaymentApiProvider;
 using Payment.Domain.Aggregates.PaymentAggregate.PaymentApiProvider.DTOs;
 using Payment.Domain.Aggregates.ProductAggregate.ProductApiProvider;
-using Payment.Domain.Aggregates.ProductAggregate.ProductApiProvider.DTOs;
+using SharedKernel.Contracts.Abstractions;
+using SharedKernel.Contracts.Events;
+using SharedKernel.Contracts.Events.DTOs;
 using SharedKernel.CQRS;
 using SharedKernel.Exceptions.Payment;
 using SharedKernel.Exceptions.Product;
@@ -15,7 +15,7 @@ namespace Payment.Application.Aggregates.PaymentAggregate.Commands.Pay;
 public class PayCommandHandler(
     IProductApiProvider productApiProvider,
     IPaymentApiProvider paymentApiProvider,
-    IOrderApiProvider orderApiProvider) : ICommandHandler<PayCommand>
+    IEventBus eventBus) : ICommandHandler<PayCommand>
 {
     public async Task<Unit> Handle(PayCommand command, CancellationToken cancellationToken)
     {
@@ -49,34 +49,25 @@ public class PayCommandHandler(
         if (transactionId == Guid.Empty)
             throw new PaymentFailedException();
 
-        var createOrderDto = new CreateOrderDTO
+        var orderItems = new List<OrderItemDTO>
         {
-            UserId = command.UserId,
-            TotalPrice = totalPrice,
-            TransactionId = transactionId,
-            Status = OrderStatus.Completed,
-            OrderItems =
-            [
-                new CreateOrderItemDTO
-                {
-                    ProductId = product.Id,
-                    Price = product.Price,
-                    Quantity = command.Quantity,
-                }
-            ]
+            new(product.Id, command.Quantity, product.Price)
         };
+        var orderCreatedEvent = new OrderCreatedEvent(
+            command.UserId,
+            DateTimeOffset.UtcNow,
+            totalPrice,
+            transactionId,
+            OrderStatuses.Completed,
+            orderItems);
+        await eventBus.PublishAsync(orderCreatedEvent, cancellationToken);
 
-        await orderApiProvider.CreateOrderAsync(command.Jwt, createOrderDto, cancellationToken);
+        var item = orderItems
+            .Select(item => new ProductQuantityDTO(item.ProductId, item.Quantity))
+            .ToList();
 
-        var dto = new DecreaseProductQuantitiesDto
-        {
-            Items =
-            [
-                new ProductQuantityDto(product.Id, command.Quantity)
-            ],
-        };
-
-        await productApiProvider.DecreaseProductsQuantityAsync(command.Jwt, dto, cancellationToken);
+        var productsQuantityDecreasedEvent = new ProductsQuantitiesDecreasedEvent(item);
+        await eventBus.PublishAsync(productsQuantityDecreasedEvent, cancellationToken);
 
         return Unit.Value;
     }
